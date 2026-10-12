@@ -1,0 +1,76 @@
+# ===================================================================
+# CustomEngine .gitignore (DirectX 12 / C++20 / CMake / MSVC)
+# ===================================================================
+
+# --- CMake & Build Directories ---
+build/
+Build/
+bin/
+Bin/
+out/
+Out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+
+# --- Visual Studio / MSVC IDE Artifacts ---
+.vs/
+*.sln.docstates
+*.suo
+*.user
+*.userosv
+*.userprefs
+*.vcxproj.user
+Debug/
+Release/
+x64/
+x86/
+ARM/
+ARM64/
+
+# --- Intermediate Build Artifacts & Binaries ---
+*.ilk
+*.pdb
+*.idb
+*.exp
+*.lib
+*.dll
+*.exe
+*.res
+*.tlog
+*.manifest
+*.ipch
+*.pch
+*.lastbuildstate
+*.unsuccessfulbuild
+*.cso
+
+# Compiled C/C++ object files (preserve 3D asset models in assets/)
+*.obj
+!assets/**/*.obj
+!assets/*.obj
+
+# --- Editor & IDE Files ---
+.vscode/
+.idea/
+*.swp
+*~
+*.orig
+
+# --- OS-specific Artifacts ---
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# --- Logs, Diagnostics & Temporary Files ---
+*.log
+*.tmp
+*.bak
+*.dmp
+test_out.txt
+test_err.txt
