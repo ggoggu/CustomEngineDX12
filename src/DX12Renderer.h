@@ -47,8 +47,11 @@ public:
     DX12Renderer(HWND hwnd, int width, int height);
     ~DX12Renderer();
 
-    void Update(float deltaTime);
+    void Update(float deltaTime, int mouseDeltaX = 0, int mouseDeltaY = 0);
     void Render();
+
+    Camera& GetCamera() { return m_camera; }
+    const Camera& GetCamera() const { return m_camera; }
 
 private:
     void InitDX12();

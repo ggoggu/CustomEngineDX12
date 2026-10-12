@@ -787,9 +787,9 @@ void DX12Renderer::CreateAccelerationStructures()
     m_commandList->ResourceBarrier(1, &uavBarrier);
 }
 
-void DX12Renderer::Update(float deltaTime)
+void DX12Renderer::Update(float deltaTime, int mouseDeltaX, int mouseDeltaY)
 {
-    if (m_camera.Update(deltaTime)) {
+    if (m_camera.Update(deltaTime, mouseDeltaX, mouseDeltaY)) {
         m_accumulationFrames = 0;
     }
     m_accumulationFrames++;

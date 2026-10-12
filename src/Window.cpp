@@ -1,7 +1,9 @@
 #include "Window.h"
 
 Window::Window(int width, int height, const std::wstring& title)
-    : m_width(width), m_height(height), m_title(title), m_windowClassName(L"CustomEngineWindowClass")
+    : m_width(width), m_height(height), m_title(title), m_windowClassName(L"CustomEngineWindowClass"),
+      m_hwnd(nullptr), m_hInstance(nullptr),
+      m_isRButtonDown(false), m_lastMouseX(0), m_lastMouseY(0), m_mouseDeltaX(0), m_mouseDeltaY(0)
 {
     m_hInstance = GetModuleHandle(nullptr);
 
@@ -44,8 +46,22 @@ Window::Window(int width, int height, const std::wstring& title)
 
 Window::~Window()
 {
+    if (m_isRButtonDown)
+    {
+        ReleaseCapture();
+        m_isRButtonDown = false;
+    }
     DestroyWindow(m_hwnd);
     UnregisterClassW(m_windowClassName.c_str(), m_hInstance);
+}
+
+bool Window::ConsumeMouseDelta(int& outDx, int& outDy)
+{
+    outDx = m_mouseDeltaX;
+    outDy = m_mouseDeltaY;
+    m_mouseDeltaX = 0;
+    m_mouseDeltaY = 0;
+    return (outDx != 0 || outDy != 0);
 }
 
 bool Window::ProcessMessages()
@@ -82,6 +98,50 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
     {
         switch (uMsg)
         {
+        case WM_RBUTTONDOWN:
+        {
+            SetCapture(hwnd);
+            pWindow->m_isRButtonDown = true;
+            pWindow->m_lastMouseX = static_cast<short>(LOWORD(lParam));
+            pWindow->m_lastMouseY = static_cast<short>(HIWORD(lParam));
+            return 0;
+        }
+        case WM_RBUTTONUP:
+        {
+            if (pWindow->m_isRButtonDown)
+            {
+                pWindow->m_isRButtonDown = false;
+                ReleaseCapture();
+            }
+            return 0;
+        }
+        case WM_MOUSEMOVE:
+        {
+            if (pWindow->m_isRButtonDown)
+            {
+                short curX = static_cast<short>(LOWORD(lParam));
+                short curY = static_cast<short>(HIWORD(lParam));
+                pWindow->m_mouseDeltaX += (curX - pWindow->m_lastMouseX);
+                pWindow->m_mouseDeltaY += (curY - pWindow->m_lastMouseY);
+                pWindow->m_lastMouseX = curX;
+                pWindow->m_lastMouseY = curY;
+            }
+            return 0;
+        }
+        case WM_CAPTURECHANGED:
+        {
+            pWindow->m_isRButtonDown = false;
+            return 0;
+        }
+        case WM_KILLFOCUS:
+        {
+            if (pWindow->m_isRButtonDown)
+            {
+                pWindow->m_isRButtonDown = false;
+                ReleaseCapture();
+            }
+            return 0;
+        }
         case WM_CLOSE:
             PostQuitMessage(0);
             return 0;

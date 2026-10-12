@@ -109,7 +109,67 @@ void Test_CameraJump()
 }
 
 // -------------------------------------------------------------
-// Test 2: Runtime Shader Compilation via DXC
+// Test 3: Camera Mouse Look & Pitch Clamping
+// -------------------------------------------------------------
+void Test_CameraMouseLook()
+{
+    Camera camera;
+    camera.SetRotation(0.0f, 0.0f);
+    ASSERT_NEAR(camera.GetPitch(), 0.0f, 0.001f, "Initial pitch should be 0");
+    ASSERT_NEAR(camera.GetYaw(), 0.0f, 0.001f, "Initial yaw should be 0");
+
+    // Test mouse look delta
+    camera.SetMouseSensitivity(0.1f);
+    bool moved = camera.ProcessMouseLook(100, 50); // deltaX = 100, deltaY = 50
+    ASSERT_TRUE(moved, "ProcessMouseLook should report true for non-zero delta");
+    ASSERT_NEAR(camera.GetYaw(), 10.0f, 0.001f, "Yaw should increase by deltaX * sensitivity (10.0f)");
+    ASSERT_NEAR(camera.GetPitch(), 5.0f, 0.001f, "Pitch should increase by deltaY * sensitivity (5.0f)");
+
+    // Test zero delta
+    moved = camera.ProcessMouseLook(0, 0);
+    ASSERT_TRUE(!moved, "ProcessMouseLook should report false for zero delta");
+
+    // Test Pitch Clamping at upper boundary (+89 deg)
+    camera.Rotate(100.0f, 0.0f);
+    ASSERT_NEAR(camera.GetPitch(), 89.0f, 0.001f, "Pitch should clamp at 89.0f");
+
+    // Test Pitch Clamping at lower boundary (-89 deg)
+    camera.Rotate(-200.0f, 0.0f);
+    ASSERT_NEAR(camera.GetPitch(), -89.0f, 0.001f, "Pitch should clamp at -89.0f");
+
+    // Verify vector orthonormality after arbitrary mouse rotation
+    camera.Rotate(45.0f, 60.0f);
+    const XMFLOAT3& forward = camera.GetForward();
+    const XMFLOAT3& right = camera.GetRight();
+    const XMFLOAT3& up = camera.GetUp();
+
+    XMVECTOR fVec = XMLoadFloat3(&forward);
+    XMVECTOR rVec = XMLoadFloat3(&right);
+    XMVECTOR uVec = XMLoadFloat3(&up);
+
+    float dotFR = XMVectorGetX(XMVector3Dot(fVec, rVec));
+    float dotFU = XMVectorGetX(XMVector3Dot(fVec, uVec));
+    float dotRU = XMVectorGetX(XMVector3Dot(rVec, uVec));
+
+    ASSERT_NEAR(dotFR, 0.0f, 0.001f, "Forward and Right vectors must be orthogonal");
+    ASSERT_NEAR(dotFU, 0.0f, 0.001f, "Forward and Up vectors must be orthogonal");
+    ASSERT_NEAR(dotRU, 0.0f, 0.001f, "Right and Up vectors must be orthogonal");
+
+    float lenF = XMVectorGetX(XMVector3Length(fVec));
+    float lenR = XMVectorGetX(XMVector3Length(rVec));
+    float lenU = XMVectorGetX(XMVector3Length(uVec));
+
+    ASSERT_NEAR(lenF, 1.0f, 0.001f, "Forward vector must be unit length");
+    ASSERT_NEAR(lenR, 1.0f, 0.001f, "Right vector must be unit length");
+    ASSERT_NEAR(lenU, 1.0f, 0.001f, "Up vector must be unit length");
+
+    // Test Update with mouse deltas
+    bool updateMoved = camera.Update(0.016f, -20, 10);
+    ASSERT_TRUE(updateMoved, "Camera::Update should report moved when mouse deltas provided");
+}
+
+// -------------------------------------------------------------
+// Test 4: Runtime Shader Compilation via DXC
 // -------------------------------------------------------------
 void Test_ShaderCompilation()
 {
@@ -217,6 +277,7 @@ int main()
 
     RUN_TEST(Test_CameraMath);
     RUN_TEST(Test_CameraJump);
+    RUN_TEST(Test_CameraMouseLook);
     RUN_TEST(Test_ShaderCompilation);
     RUN_TEST(Test_DX12DeviceAndDXRFeatures);
     RUN_TEST(Test_SBTAlignmentInvariants);

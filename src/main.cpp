@@ -35,7 +35,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
             float deltaTime = static_cast<float>(currentTime.QuadPart - lastTime.QuadPart) / frequency.QuadPart;
             lastTime = currentTime;
 
-            renderer->Update(deltaTime);
+            int mouseDeltaX = 0;
+            int mouseDeltaY = 0;
+            window.ConsumeMouseDelta(mouseDeltaX, mouseDeltaY);
+
+            renderer->Update(deltaTime, mouseDeltaX, mouseDeltaY);
             renderer->Render();
 
             if (isSmokeTest)

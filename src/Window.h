@@ -18,6 +18,9 @@ public:
     int GetWidth() const { return m_width; }
     int GetHeight() const { return m_height; }
 
+    bool IsRightMouseDown() const { return m_isRButtonDown; }
+    bool ConsumeMouseDelta(int& outDx, int& outDy);
+
 private:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -27,4 +30,11 @@ private:
     int m_height;
     std::wstring m_title;
     std::wstring m_windowClassName;
+
+    // Mouse input tracking
+    bool m_isRButtonDown;
+    int m_lastMouseX;
+    int m_lastMouseY;
+    int m_mouseDeltaX;
+    int m_mouseDeltaY;
 };

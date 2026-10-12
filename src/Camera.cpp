@@ -7,6 +7,7 @@ Camera::Camera()
       m_yaw(0.0f),
       m_moveSpeed(5.0f),
       m_rotationSpeed(0.1f),
+      m_mouseSensitivity(0.15f),
       m_verticalVelocity(0.0f),
       m_jumpSpeed(7.0f),
       m_gravity(20.0f),
@@ -29,6 +30,36 @@ void Camera::SetRotation(float pitch, float yaw)
     m_pitch = pitch;
     m_yaw = yaw;
     UpdateVectors();
+}
+
+void Camera::Rotate(float pitchDelta, float yawDelta)
+{
+    m_pitch += pitchDelta;
+    m_yaw += yawDelta;
+
+    // Clamp pitch
+    if (m_pitch > 89.0f) m_pitch = 89.0f;
+    if (m_pitch < -89.0f) m_pitch = -89.0f;
+
+    // Normalize yaw within [-360.0f, 360.0f]
+    while (m_yaw > 360.0f) m_yaw -= 360.0f;
+    while (m_yaw < -360.0f) m_yaw += 360.0f;
+
+    UpdateVectors();
+}
+
+bool Camera::ProcessMouseLook(int deltaX, int deltaY)
+{
+    if (deltaX == 0 && deltaY == 0)
+    {
+        return false;
+    }
+
+    float yawDelta = static_cast<float>(deltaX) * m_mouseSensitivity;
+    float pitchDelta = static_cast<float>(deltaY) * m_mouseSensitivity;
+
+    Rotate(pitchDelta, yawDelta);
+    return true;
 }
 
 void Camera::Jump()
@@ -77,7 +108,7 @@ void Camera::UpdateVectors()
     XMStoreFloat3(&m_up, XMVector3Normalize(up));
 }
 
-bool Camera::Update(float deltaTime)
+bool Camera::Update(float deltaTime, int mouseDeltaX, int mouseDeltaY)
 {
     bool moved = false;
     XMVECTOR pos = XMLoadFloat3(&m_position);
@@ -131,6 +162,14 @@ bool Camera::Update(float deltaTime)
         moved = true;
     }
 
+    // Mouse look rotation
+    if (mouseDeltaX != 0 || mouseDeltaY != 0)
+    {
+        m_yaw += static_cast<float>(mouseDeltaX) * m_mouseSensitivity;
+        m_pitch += static_cast<float>(mouseDeltaY) * m_mouseSensitivity;
+        moved = true;
+    }
+
     // Camera rotation with arrow keys
     if (GetAsyncKeyState(VK_UP) & 0x8000)   { m_pitch -= m_rotationSpeed * 100.0f * deltaTime; moved = true; }
     if (GetAsyncKeyState(VK_DOWN) & 0x8000) { m_pitch += m_rotationSpeed * 100.0f * deltaTime; moved = true; }
@@ -140,6 +179,10 @@ bool Camera::Update(float deltaTime)
     // Clamp pitch
     if (m_pitch > 89.0f) m_pitch = 89.0f;
     if (m_pitch < -89.0f) m_pitch = -89.0f;
+
+    // Normalize yaw within [-360.0f, 360.0f]
+    while (m_yaw > 360.0f) m_yaw -= 360.0f;
+    while (m_yaw < -360.0f) m_yaw += 360.0f;
 
     if (moved)
     {
